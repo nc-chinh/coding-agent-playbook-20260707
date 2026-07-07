@@ -55,4 +55,8 @@ checkpoint は状態の連鎖として並ぶ (✅ = 整備済み):
 - **運用保守・バグ修正** フェーズは 3 つのシナリオを持つ。`06`→`07` (readings drift) は健全な `05-fixed` にバグを仕込んだ broken/fixed の完結ペアで、[box-personas.md](../../rules/box-personas.md) US3 の**local observe box 調査**を実演する。`08` (server 500) は `07-readings-drift-fixed` (readings drift 修正済みの状態) にさらに別バグを仕込んだ broken 単体で、**cloud 常駐の無人 fixer pipeline** ([docs/decisions/cloud-unattended-sre.md](../decisions/cloud-unattended-sre.md)) が実際に fix PR を出すところまでを実演するためのもの。fix 用の frozen stage は作らず、生成された PR ([https://github.com/kanka-jp/coding-agent-playbook/pull/159](https://github.com/kanka-jp/coding-agent-playbook/pull/159)) を実演時にその場で見せる (checkpoint を増やさず、無人パイプラインの「PR は無人で開く／merge は人間」という決定 3 の挙動をそのまま教材にする)。`09`→`10` (log injection) は `08` を base にした broken/fixed ペアで、**汚染ログによる prompt injection の攻撃→防御**を実演する — 攻撃は AWS 抜きのローカル再現 (naive agent が乗っ取られる)、防御は既存 observe box の 2 層 (runbook 規律 + read-only IAM) をそのまま流用する ([stage-playbook.md](stage-playbook.md) シナリオ C)。
 - 講義スライドは状態ではなく**フェーズ**に対応する。上記「スライド」参照。
 
+## workshop snapshot repo への sync
+
+開催回ごとの受講者配布 repo（`coding-agent-playbook-YYYYMMDD`）へ本 repo の最新を反映する手順は [workshop-sync.md](workshop-sync.md)。snapshot repo は upstream と履歴を共有せず、各ブランチの tree を commit-tree で完全一致させて直接 push する（sync は PR にしない）。
+
 **現状 (2026-07)**: `01`〜`10` の checkpoint がすべて整備済み。運用保守・バグ修正フェーズの local 調査シナリオ (`06`/`07`)、cloud 常駐 fixer シナリオ (`08` + [https://github.com/kanka-jp/coding-agent-playbook/pull/159](https://github.com/kanka-jp/coding-agent-playbook/pull/159))、ログ経由 prompt injection シナリオ (`09`/`10`) が揃っている。残るのは cloud 常駐 fixer の full 配線 (CloudWatch alarm 経由の trigger・Slack 承認通知。[docs/decisions/cloud-unattended-sre.md](../decisions/cloud-unattended-sre.md)「残差・未決」参照)。

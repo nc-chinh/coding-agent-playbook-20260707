@@ -19,6 +19,7 @@ repo root の `docs/` は **playbook（講義基盤）自身の文書**。produc
 | [instructor/README.md](instructor/README.md) | 講義運営の手順。新 stage 作成 / restack / スライド配信 / checkpoint 連鎖の設計意図 |
 | [instructor/stage-playbook.md](instructor/stage-playbook.md) | 講義中に横に開く実演台本。stage ごとの依頼プロンプト例と見どころ |
 | [instructor/repo-settings.md](instructor/repo-settings.md) | GitHub ruleset（merge gate）の現行設定値と確認・変更方法 |
+| [instructor/workshop-sync.md](instructor/workshop-sync.md) | 開催回ごとの受講者配布 snapshot repo へ最新を反映する sync 手順 |
 
 ## decisions/ — ADR（なぜそう決めたかの記録。追記のみ）
 
