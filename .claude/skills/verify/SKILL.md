@@ -274,7 +274,7 @@ VERIFY_REPORT: 42 deploy
 #### Issue の作成
 
 1. `claude session id` でセッション ID を取得する
-2. Issue 本文を `.claude/tmp/verify-issue-body.md` に Write ツールで書き出す（シェルメタ文字を避けるため heredoc やリダイレクトは使わない）
+2. Issue 本文を `.claude/tmp/verify-issue-body-{session_id}.md`（`{session_id}` は手順 1 で取得した値）に Write ツールで書き出す（シェルメタ文字を避けるため heredoc やリダイレクトは使わない。ファイル名にセッション ID を含めるのは、同一 checkout 上で複数セッションが並行して `/verify --track=github` を実行した際に固定ファイル名が race するのを防ぐため。[rules/pr-body.md](../../../rules/pr-body.md) の命名規約に従う）
 3. ラベル `verify/manual` の存在を確認する: `gh label list --search "verify/manual" --json name --jq '.[] | select(.name == "verify/manual") | .name'`
 4. Issue を作成する:
 
@@ -282,7 +282,7 @@ VERIFY_REPORT: 42 deploy
 gh issue create \
   --title "verify: PR #{PR番号} 手動検証項目" \
   --label "verify/manual" \
-  --body-file .claude/tmp/verify-issue-body.md
+  --body-file .claude/tmp/verify-issue-body-{session_id}.md
 ```
 
 PR 番号が省略されていた場合（mode=local で `git diff` 使用時）はタイトルを `verify: 手動検証項目 ({ブランチ名})` とする。ラベルが存在しない場合は `--label` を省略する。

@@ -156,7 +156,9 @@ if ! PUSH_ERR="$(git push -u origin "$FIX_BRANCH" 2>&1)"; then
 fi
 
 SHORT_SHA="$(git rev-parse --short HEAD)"
-PR_BODY_BASE="観測段の sanitized triage を起点に無人 SRE agent が作成した最小 fix。**merge は人間レビュー後**（承認ゲート）。
+AUTO_START='<!-- sre-fixer:auto-start -->'
+AUTO_END='<!-- sre-fixer:auto-end -->'
+PR_HEADER="観測段の sanitized triage を起点に無人 SRE agent が作成した最小 fix。**merge は人間レビュー後**（承認ゲート）。
 
 incident: \`${INCIDENT_ID}\`
 fixer: パターン A（claude -p on Bedrock / 修正 identity・AWS read なし）
@@ -168,11 +170,25 @@ head: \`${SHORT_SHA}\`"
 EXISTING_PR_NUM="$(gh pr list --head "$FIX_BRANCH" --base "$PR_BASE" --state open --json number,isCrossRepository --jq '[.[] | select(.isCrossRepository == false)][0].number // empty')"
 if [ -n "$EXISTING_PR_NUM" ]; then
   echo ">> existing open PR #${EXISTING_PR_NUM} を head=${SHORT_SHA} で superseded note 付きに更新"
-  gh pr edit "$EXISTING_PR_NUM" --body "${PR_BODY_BASE}
+  # incident/fixer/head と supersede note を auto-start/auto-end marker で囲んだ bot 管理領域として扱う。
+  # 更新のたびに古い block を marker ごと除去してから作り直し、head の陳腐化と note の無限累積を防ぎつつ、
+  # marker 外の内容（人間が追記した review context 等）を保持する。null body（空 description）は空文字に
+  # 正規化するが、gh pr view 自体の失敗は human body 全消しにつながるため空文字にせず fail-closed で中止する。
+  if ! CURRENT_BODY="$(gh pr view "$EXISTING_PR_NUM" --json body -q '.body // ""')"; then
+    echo "ERROR: PR #${EXISTING_PR_NUM} の body 取得に失敗したため更新を中止します" >&2
+    exit 1
+  fi
+  HUMAN_PART="$(printf '%s' "$CURRENT_BODY" | sed "/^${AUTO_START}\$/,/^${AUTO_END}\$/d")"
+  gh pr edit "$EXISTING_PR_NUM" --body "${AUTO_START}
+${PR_HEADER}
 
 ---
-⚠️ 本 PR は新しい fixer run で **force-push 更新** されました。前 commit の fix は最新 head (\`${SHORT_SHA}\`) で superseded されています。"
+⚠️ 本 PR は新しい fixer run で **force-push 更新** されました。前 commit の fix は最新 head (\`${SHORT_SHA}\`) で superseded されています。
+${AUTO_END}
+${HUMAN_PART}"
 else
   echo ">> 新規 PR を作成"
-  gh pr create --base "$PR_BASE" --title "fix(sre): ${INCIDENT_ID}" --body "$PR_BODY_BASE"
+  gh pr create --base "$PR_BASE" --title "fix(sre): ${INCIDENT_ID}" --body "${AUTO_START}
+${PR_HEADER}
+${AUTO_END}"
 fi
