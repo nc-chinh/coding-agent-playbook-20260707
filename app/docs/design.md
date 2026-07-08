@@ -175,8 +175,10 @@ web            api                         mock (協会/SMS/JEPX)
  │        api: PowerDataPort で契約+30分値取得 ─▶ /power-data/*
  │        api: MarketPricePort で JEPX価格取得 ─▶ /jepx/*
  │        api: core.diagnose(...) 純関数で算出   │
- │◀─ 200 { DiagnosisResult, contract } ───│
+ │◀─ 200 { DiagnosisResult } ────────────│
  │  診断結果表示（料金差 + 12ヶ月月次グラフ）│
+ │─ GET /api/contract (Bearer) ──────────│   ← 申込プレフィル用の契約マスタ取得（必要なら）
+ │◀─ 200 { contract } ───────────────────│
  │─ 申込フォームへ遷移（contract をプレフィル）│
 ```
 
