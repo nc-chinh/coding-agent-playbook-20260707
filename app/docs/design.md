@@ -167,7 +167,7 @@ web            api                         mock (協会/SMS/JEPX)
  │◀─ 200 { requestId } ───────────────────│
  │  OTP 入力（requestId を保持）             │
  │─ POST /api/auth/sms/verify ─▶ SmsPort ─▶ POST /sms/verify {requestId,code}
- │◀─ 200 { token: JWT(verified) } ────────│   ← 電話hash・検証済 を claim 化
+ │◀─ 200 { token: JWT(verified) } ────────│   ← 電話の pseudonymous ID・検証済 を claim 化
  │  同意画面（提供先/目的/期間を表示）       │
  │─ POST /api/consent (Bearer) ───────────│   ← 検証済 JWT を要求
  │◀─ 200 { token: JWT(verified+consent) }─│   ← 同意 scope を claim に追加し再発行
