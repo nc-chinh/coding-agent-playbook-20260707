@@ -184,7 +184,7 @@ web            api                         mock (協会/SMS/JEPX)
 
 - **claims**: `sub`=電話番号の **peppered pseudonymous ID**（生番号もソルト無し hash も入れない。下記）、`verified`=true、`consent`=付与済み scope（例 `["diagnosis"]`）＋ `consentRef`（**内部の同意記録 `consentId` を指す参照**。[§10.1](#101-同意記録のデータモデルtargetdesign-only) の監査証跡と相関。協会への提供リクエスト ID は別フィールド `providerRequestId` として同意記録側に持ち、JWT には載せない）、`iss`/`aud`（本 api 固有）、`iat`/`exp`（発行から 15 分）、`jti`（一意 ID）
 - **`sub` の作り方**: 電話番号は探索空間が小さく素の SHA では辞書攻撃で復元されるため、**pepper 付き HMAC-SHA256**（pepper は Secrets Manager 管理）で pseudonymous 化する。分析・ログ用 ID と外部連携用 ID は分離する
-- **署名鍵 / pepper**: MVP は env（`JWT_SECRET`）、本番は Secrets Manager から注入
+- **署名鍵 / pepper**: MVP は env（JWT 署名鍵 + HMAC pepper）、本番は Secrets Manager から注入
 - **段階的 claim**: SMS 検証で `verified` のみ、同意で `consent`＋`consentRef` を足して再発行。診断 API は `verified && consent.includes("diagnosis")` を要求。検証時は `iss`/`aud`/`exp` を必須チェック
 - **リプレイ対策のトレードオフ**: 完全ステートレスでは `jti` の失効管理ができないため、**短 TTL（15 分）＋ TLS ＋ Bearer をログ/URL に出さない**で軽減する（許容リスクとして明記）。同意 JWT の一回性・盗難時の即時失効が要件化した段階で `jti` denylist 用の小さな state（ElastiCache/DynamoDB TTL）を導入する（本 MVP では持たない）
 - 生の電話番号・契約名義などの PII は JWT に載せず、必要時に mock/協会から都度取得する
